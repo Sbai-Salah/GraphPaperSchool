@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign up - Salah's little classroom</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="sheet">
+  <header>
+    <p class="brand"><a href="index.html">Salah's little classroom</a></p>
+    <nav>[ <a href="index.html">home</a> | <a href="signup.html">sign up</a> | <a href="login.html">log in</a> ]</nav>
+  </header>
+
+  <h1>Sign up</h1>
+  <p>It's free. Already have an account? <a href="login.html">Log in</a>.</p>
+
+  <p id="msg" class="msg" role="alert" hidden></p>
+
+  <form id="form" autocomplete="on">
+    <label for="name">Your name</label>
+    <input id="name" name="name" type="text" required maxlength="60" autocomplete="name">
+
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" required maxlength="120" autocomplete="email">
+
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" required minlength="8" maxlength="100" autocomplete="new-password">
+    <p class="hint">At least 8 characters.</p>
+
+    <label for="level">What are you studying right now? (optional)</label>
+    <select id="level" name="level">
+      <option value="">Pick one</option>
+      <option value="high-school">High school</option>
+      <option value="university">University</option>
+      <option value="working">I'm working</option>
+      <option value="other">Something else</option>
+    </select>
+
+    <label for="goal">What would you like to learn here? (optional)</label>
+    <textarea id="goal" name="goal" maxlength="200"></textarea>
+    <p class="hint">I use your answers to plan lessons. I only keep your name, email and these two answers, and no other student can see them.</p>
+
+    <p>
+      <button type="submit" id="go">Create my account</button>
+      <button type="button" id="google">Sign up with Google</button>
+    </p>
+  </form>
+
+  <footer><p>Made by hand. Works in any browser.</p></footer>
+</main>
+
+<script type="module">
+import {
+  auth, onAuthStateChanged, createUserWithEmailAndPassword, updateProfile,
+  sendEmailVerification, signInWithPopup, GoogleAuthProvider, ensureStudent, friendlyError
+} from "./firebase.js";
+
+const $ = (id) => document.getElementById(id);
+const say = (text, bad = true) => { const m = $("msg"); m.textContent = text; m.hidden = !text; m.classList.toggle("bad", bad); };
+const busy = (on) => { $("go").disabled = on; $("google").disabled = on; };
+const extras = () => ({ level: $("level").value, goal: $("goal").value });
+
+$("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  say("");
+  const name = $("name").value.trim();
+  const password = $("password").value;
+  if (!name) return say("Please write your name.");
+  if (password.length < 8) return say("Pick a longer password (at least 8 characters).");
+  busy(true);
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, $("email").value.trim(), password);
+    await updateProfile(cred.user, { displayName: name });
+    await ensureStudent(cred.user, extras()).catch(console.error);
+    await sendEmailVerification(cred.user);
+    location.href = "lessons.html";
+  } catch (err) {
+    say(friendlyError(err));
+    busy(false);
+  }
+});
+
+$("google").addEventListener("click", async () => {
+  say("");
+  busy(true);
+  try {
+    const cred = await signInWithPopup(auth, new GoogleAuthProvider());
+    await ensureStudent(cred.user, extras()).catch(console.error);
+    location.href = "lessons.html";
+  } catch (err) {
+    say(friendlyError(err));
+    busy(false);
+  }
+});
+
+// Already signed in? Skip ahead.
+onAuthStateChanged(auth, (user) => { if (user && !$("go").disabled) location.replace("lessons.html"); });
+</script>
+</body>
+</html>

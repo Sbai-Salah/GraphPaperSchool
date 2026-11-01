@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Log in - Salah's little classroom</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="sheet">
+  <header>
+    <p class="brand"><a href="index.html">Salah's little classroom</a></p>
+    <nav>[ <a href="index.html">home</a> | <a href="signup.html">sign up</a> | <a href="login.html">log in</a> ]</nav>
+  </header>
+
+  <h1>Log in</h1>
+  <p>New here? <a href="signup.html">Sign up</a> first. It's free.</p>
+
+  <p id="msg" class="msg" role="alert" hidden></p>
+
+  <form id="form">
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" required maxlength="120" autocomplete="email">
+
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" required maxlength="100" autocomplete="current-password">
+
+    <p>
+      <button type="submit" id="go">Log in</button>
+      <button type="button" id="google">Log in with Google</button>
+    </p>
+    <p><button type="button" id="reset" class="linklike">I forgot my password</button></p>
+  </form>
+
+  <footer><p>Made by hand. Works in any browser.</p></footer>
+</main>
+
+<script type="module">
+import {
+  auth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider,
+  sendPasswordResetEmail, ensureStudent, friendlyError
+} from "./firebase.js";
+
+const $ = (id) => document.getElementById(id);
+const say = (text, bad = true) => { const m = $("msg"); m.textContent = text; m.hidden = !text; m.classList.toggle("bad", bad); };
+const busy = (on) => { $("go").disabled = on; $("google").disabled = on; };
+
+$("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  say("");
+  busy(true);
+  try {
+    await signInWithEmailAndPassword(auth, $("email").value.trim(), $("password").value);
+    location.href = "lessons.html";
+  } catch (err) {
+    say(friendlyError(err));
+    busy(false);
+  }
+});
+
+$("google").addEventListener("click", async () => {
+  say("");
+  busy(true);
+  try {
+    const cred = await signInWithPopup(auth, new GoogleAuthProvider());
+    await ensureStudent(cred.user).catch(console.error);
+    location.href = "lessons.html";
+  } catch (err) {
+    say(friendlyError(err));
+    busy(false);
+  }
+});
+
+$("reset").addEventListener("click", async () => {
+  const email = $("email").value.trim();
+  if (!email) return say("Type your email in the box above first, then press this again.");
+  try { await sendPasswordResetEmail(auth, email); } catch (err) {
+    if (err && err.code === "auth/network-request-failed") return say(friendlyError(err));
+  }
+  // Same answer whether or not the address has an account, so nobody can use this to check who is a student.
+  say("If that address has an account, a link to choose a new password is on its way. Check your spam folder too.", false);
+});
+
+onAuthStateChanged(auth, (user) => { if (user && !$("go").disabled) location.replace("lessons.html"); });
+</script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function verified() { return signedIn() && request.auth.token.email_verified == true; }
+
+    // One small profile per student. Each student can create and read only their own.
+    match /students/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['displayName', 'email', 'level', 'goal', 'createdAt'])
+        && request.resource.data.keys().hasAll(['displayName', 'email', 'level', 'goal', 'createdAt'])
+        && request.resource.data.displayName is string && request.resource.data.displayName.size() <= 60
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.level in ['', 'high-school', 'university', 'working', 'other']
+        && request.resource.data.goal is string && request.resource.data.goal.size() <= 200
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+
+    // Lessons: only students with a confirmed email can read. Only you can add them (in the console).
+    match /videos/{id} {
+      allow read: if verified();
+      allow write: if false;
+    }
+
+    // Questions: students can send, nobody can read them back except you in the console.
+    match /questions/{id} {
+      allow create: if verified()
+        && request.resource.data.keys().hasOnly(['uid', 'text', 'createdAt'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1000
+        && request.resource.data.createdAt == request.time;
+      allow read, update, delete: if false;
+    }
+  }
+}

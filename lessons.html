@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Lessons - Salah's little classroom</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="sheet">
+  <header>
+    <p class="brand"><a href="index.html">Salah's little classroom</a></p>
+    <nav>[ <a href="index.html">home</a> | <a href="lessons.html">lessons</a> | <button type="button" id="out" class="linklike">log out</button> ]</nav>
+  </header>
+
+  <section id="loading">
+    <p>One moment...</p>
+  </section>
+
+  <section id="verify" hidden>
+    <h1>Check your email</h1>
+    <p>We sent a confirmation link to <strong id="verify-email"></strong>. Click it, then press the button below.</p>
+    <p class="note">Can't find it? Look in your spam folder.</p>
+    <p id="verify-msg" class="msg" role="alert" hidden></p>
+    <p>
+      <button type="button" id="check">I clicked the link</button>
+      <button type="button" id="resend">Send the email again</button>
+    </p>
+  </section>
+
+  <section id="lessons" hidden>
+    <h1>Welcome, <span id="who"></span>.</h1>
+    <p class="note">Take your time. Pause, rewind, and write things down by hand if you can.</p>
+
+    <div id="list"></div>
+
+    <h2>Ask me something</h2>
+    <p>Stuck on a video? Write your question here and I'll read it.</p>
+    <p id="ask-msg" class="msg" role="alert" hidden></p>
+    <form id="ask">
+      <label for="q">Your question</label>
+      <textarea id="q" maxlength="1000" required></textarea>
+      <p><button type="submit" id="send">Send my question</button></p>
+    </form>
+  </section>
+
+  <footer><p>Made by hand. Please don't share the videos outside the class.</p></footer>
+</main>
+
+<script type="module">
+import {
+  auth, db, onAuthStateChanged, signOut, sendEmailVerification,
+  collection, getDocs, query, orderBy, addDoc, serverTimestamp, friendlyError
+} from "./firebase.js";
+
+const $ = (id) => document.getElementById(id);
+const panels = ["loading", "verify", "lessons"];
+const show = (name) => panels.forEach((p) => { $(p).hidden = p !== name; });
+const say = (id, text, bad = true) => { const m = $(id); m.textContent = text; m.hidden = !text; m.classList.toggle("bad", bad); };
+const clip = (x, n) => (typeof x === "string" ? x.slice(0, n) : "");
+
+// Everything from the database goes in through textContent, never innerHTML.
+function el(tag, props = {}, ...kids) {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === "text") node.textContent = v; else node.setAttribute(k, v);
+  }
+  node.append(...kids);
+  return node;
+}
+
+function videoCard(v) {
+  const id = clip(v.youtubeId, 20);
+  const card = el("article", { class: "lesson" }, el("h3", { text: clip(v.title, 120) || "Untitled lesson" }));
+  if (v.track) card.append(el("p", { class: "track", text: "Track: " + clip(v.track, 60) }));
+  if (v.description) card.append(el("p", { text: clip(v.description, 400) }));
+  if (v.note) card.append(el("p", { class: "note", text: clip(v.note, 300) }));
+  if (/^[A-Za-z0-9_-]{11}$/.test(id)) {
+    const slot = el("div");
+    const watch = el("button", { type: "button", text: "Watch this video" });
+    watch.addEventListener("click", () => {
+      slot.replaceChildren(el("iframe", {
+        class: "player",
+        src: "https://www.youtube-nocookie.com/embed/" + id,
+        title: clip(v.title, 120) || "Lesson video",
+        allow: "encrypted-media; picture-in-picture; fullscreen",
+        allowfullscreen: "",
+        referrerpolicy: "strict-origin-when-cross-origin"
+      }));
+    });
+    slot.append(watch);
+    card.append(slot);
+  }
+  return card;
+}
+
+async function loadLessons() {
+  const list = $("list");
+  list.replaceChildren(el("p", { text: "Loading the lessons..." }));
+  try {
+    const snap = await getDocs(query(collection(db, "videos"), orderBy("order")));
+    if (snap.empty) {
+      list.replaceChildren(el("p", { text: "No lessons yet. The first video is on its way." }));
+      return;
+    }
+    list.replaceChildren(...snap.docs.map((d) => videoCard(d.data())));
+  } catch (err) {
+    list.replaceChildren(el("p", { class: "msg bad", text: friendlyError(err) }));
+  }
+}
+
+async function enter() {
+  show("lessons");
+  await loadLessons();
+}
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { location.replace("login.html"); return; }
+  $("who").textContent = user.displayName || user.email;
+  if (user.emailVerified) {
+    await enter();
+  } else {
+    $("verify-email").textContent = user.email;
+    show("verify");
+  }
+});
+
+$("check").addEventListener("click", async () => {
+  const user = auth.currentUser;
+  if (!user) return;
+  say("verify-msg", "");
+  try {
+    await user.reload();
+    if (user.emailVerified) {
+      await user.getIdToken(true); // refresh so the database knows the email is confirmed
+      await enter();
+    } else {
+      say("verify-msg", "Not confirmed yet. Open the email, click the link, then press this button again.");
+    }
+  } catch (err) {
+    say("verify-msg", friendlyError(err));
+  }
+});
+
+let cooling = false;
+$("resend").addEventListener("click", async () => {
+  const user = auth.currentUser;
+  if (!user || cooling) return;
+  try {
+    await sendEmailVerification(user);
+    say("verify-msg", "Sent again. Check your inbox and your spam folder.", false);
+    cooling = true;
+    setTimeout(() => { cooling = false; }, 60000);
+  } catch (err) {
+    say("verify-msg", friendlyError(err));
+  }
+});
+
+$("ask").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const user = auth.currentUser;
+  const text = $("q").value.trim();
+  if (!user || !text) return;
+  $("send").disabled = true;
+  say("ask-msg", "");
+  try {
+    await addDoc(collection(db, "questions"), { uid: user.uid, text: text.slice(0, 1000), createdAt: serverTimestamp() });
+    $("q").value = "";
+    say("ask-msg", "Got it. Thank you, I'll read it soon.", false);
+  } catch (err) {
+    say("ask-msg", friendlyError(err));
+  }
+  $("send").disabled = false;
+});
+
+$("out").addEventListener("click", async () => {
+  await signOut(auth);
+  location.replace("index.html");
+});
+</script>
+</body>
+</html>

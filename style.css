@@ -1,0 +1,129 @@
+:root {
+  --pencil: #222222;
+  --paper: #fffffe;
+  --grid: #d9e3f2;
+  --edge: #8f9db8;
+  --shadow: #b9c4da;
+  --red: #c0262d;
+  --margin: #e9a1a4;
+  --link: #0000cc;
+  --visited: #551a8b;
+  --face: #e4e4e4;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  color: var(--pencil);
+  font-family: "Times New Roman", Times, serif;
+  font-size: 1.15rem;
+  line-height: 1.6;
+  background-color: #eef3fb;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* The sheet of notebook paper, with its red margin line */
+.sheet {
+  position: relative;
+  max-width: 44rem;
+  margin: 1.5rem auto 3rem;
+  padding: 1.5rem 2rem 2rem 4rem;
+  background: var(--paper);
+  border: 1px solid var(--edge);
+  box-shadow: 4px 4px 0 var(--shadow);
+}
+.sheet::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 2.75rem;
+  width: 2px;
+  background: var(--margin);
+}
+@media (max-width: 40rem) {
+  .sheet { margin: 0; padding: 1rem 1rem 1.5rem 2rem; border-left: 0; border-right: 0; box-shadow: none; }
+  .sheet::before { left: 1.1rem; }
+}
+
+a { color: var(--link); }
+a:visited { color: var(--visited); }
+a:focus-visible, button:focus-visible, input:focus-visible,
+select:focus-visible, textarea:focus-visible { outline: 3px solid #000; outline-offset: 2px; }
+
+h1, h2, h3 { font-family: Georgia, "Times New Roman", serif; line-height: 1.25; }
+h1 { font-size: 2rem; margin: 0.6rem 0 0.4rem; }
+h2 { font-size: 1.4rem; margin: 1.8rem 0 0.5rem; border-bottom: 1px solid var(--edge); }
+h3 { font-size: 1.2rem; margin: 0 0 0.25rem; }
+
+.brand { font-family: Georgia, "Times New Roman", serif; font-weight: bold; font-size: 1.1rem; margin: 0; }
+.brand a, .brand a:visited { color: var(--pencil); text-decoration: none; }
+nav, label, button, .btn, .hint, .msg, .track, footer, select, .linklike {
+  font-family: Verdana, Geneva, sans-serif;
+}
+nav { font-size: 0.9rem; margin: 0.15rem 0 1rem; }
+
+/* Teacher's red pen */
+.note {
+  font-family: "Segoe Print", "Bradley Hand", "Comic Sans MS", "Chalkboard SE", cursive;
+  color: var(--red);
+  font-size: 1.05rem;
+  line-height: 1.5;
+  margin: 1.2rem 0;
+  transform: rotate(-1deg);
+}
+
+/* Old-fashioned beveled buttons and sunken fields */
+button, .btn {
+  display: inline-block;
+  font-size: 0.9rem;
+  color: #000;
+  background: var(--face);
+  border: 2px solid;
+  border-color: #fff #6f6f6f #6f6f6f #fff;
+  padding: 0.35em 1.1em;
+  margin: 0.25rem 0.4rem 0.25rem 0;
+  cursor: pointer;
+  text-decoration: none;
+}
+a.btn:visited { color: #000; }
+button:active, .btn:active { border-color: #6f6f6f #fff #fff #6f6f6f; }
+button:disabled { color: #666; cursor: wait; }
+.linklike {
+  background: none; border: 0; padding: 0; margin: 0;
+  color: var(--link); text-decoration: underline; font-size: 0.9rem;
+}
+
+label { display: block; font-size: 0.9rem; margin: 1.1rem 0 0.25rem; }
+input, select, textarea {
+  width: 100%;
+  max-width: 26rem;
+  font: inherit;
+  font-size: 1rem;
+  color: #000;
+  background: #fff;
+  padding: 0.35em 0.5em;
+  border: 2px solid;
+  border-color: #6f6f6f #fff #fff #6f6f6f;
+}
+textarea { max-width: 100%; min-height: 5.5rem; }
+.hint { font-size: 0.8rem; color: #444; margin: 0.25rem 0 0; }
+
+.msg {
+  font-size: 0.9rem;
+  margin: 1rem 0;
+  padding: 0.5rem 0.75rem;
+  background: #fff8d6;
+  border: 1px solid #999;
+}
+.msg.bad { background: #ffe3e3; border-color: var(--red); }
+
+.lesson { margin: 1.5rem 0; padding-bottom: 1.25rem; border-bottom: 1px dashed var(--edge); }
+.track { font-size: 0.8rem; color: #444; margin: 0 0 0.4rem; }
+.player { display: block; width: 100%; aspect-ratio: 16 / 9; border: 2px solid #000; margin-top: 0.75rem; }
+
+footer { font-size: 0.8rem; color: #444; margin-top: 2.5rem; padding-top: 0.75rem; border-top: 1px solid var(--edge); }
