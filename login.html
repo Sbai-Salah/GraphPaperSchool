@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Log in - Salah's little classroom</title>
+<title>Log in - Graph paper school</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <main class="sheet">
   <header>
-    <p class="brand"><a href="index.html">Salah's little classroom</a></p>
+    <p class="brand"><a href="index.html">Graph paper school</a></p>
     <nav>[ <a href="index.html">home</a> | <a href="signup.html">sign up</a> | <a href="login.html">log in</a> ]</nav>
   </header>
 
@@ -83,5 +83,6 @@ $("reset").addEventListener("click", async () => {
 
 onAuthStateChanged(auth, (user) => { if (user && !$("go").disabled) location.replace("lessons.html"); });
 </script>
+<script type="module" src="stage.js"></script>
 </body>
 </html>
