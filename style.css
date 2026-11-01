@@ -127,3 +127,70 @@ textarea { max-width: 100%; min-height: 5.5rem; }
 .player { display: block; width: 100%; aspect-ratio: 16 / 9; border: 2px solid #000; margin-top: 0.75rem; }
 
 footer { font-size: 0.8rem; color: #444; margin-top: 2.5rem; padding-top: 0.75rem; border-top: 1px solid var(--edge); }
+
+/* ---------- The cartoon crew behind the page ---------- */
+.sheet { z-index: 1; }
+.stage { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.stage > * { position: absolute; }
+.stage svg { display: block; overflow: visible; }
+
+.plane { top: 7vh; left: 0; animation: fly 38s linear infinite; }
+@keyframes fly {
+  0%   { transform: translate(-140px, 10px) rotate(6deg); }
+  25%  { transform: translate(25vw, -24px) rotate(-6deg); }
+  50%  { transform: translate(50vw, 14px) rotate(7deg); }
+  75%  { transform: translate(75vw, -20px) rotate(-5deg); }
+  100% { transform: translate(calc(100vw + 40px), 8px) rotate(5deg); }
+}
+
+.pencil { bottom: 0; left: 0; animation: roam 55s linear infinite; }
+@keyframes roam {
+  from { transform: translateX(-80px); }
+  to   { transform: translateX(calc(100vw + 80px)); }
+}
+.hop { transform-origin: 50% 100%; animation: hop 0.9s ease-in-out infinite; }
+@keyframes hop {
+  0%, 100% { transform: translateY(0) scale(1.08, 0.92); }
+  50%      { transform: translateY(-30px) scale(0.97, 1.04); }
+}
+.wave { transform-box: view-box; transform-origin: 32px 46px; animation: wave 0.9s ease-in-out infinite alternate; }
+@keyframes wave { from { transform: rotate(-18deg); } to { transform: rotate(22deg); } }
+
+/* The eraser hides behind the right edge of the page and peeks out now and then */
+.eraser { bottom: 24vh; left: calc(50% + 22rem - 1.2rem); animation: peek 14s ease-in-out infinite; }
+.eraser svg { transform: scaleX(-1); } /* face on the side that sticks out */
+@keyframes peek {
+  0%, 56%, 100% { transform: translateX(-4.2rem); }
+  62%, 92%      { transform: translateX(0); }
+}
+.eyes { transform-box: fill-box; transform-origin: center; animation: blink 4.5s infinite; }
+@keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 97% { transform: scaleY(0.1); } }
+
+@media (max-width: 52rem) { .eraser { display: none; } }
+/* On phones the page fills the screen, so the pencil hops along the very bottom, in front, and the plane stays out of the way */
+@media (max-width: 40rem) {
+  .stage { z-index: 2; }
+  .plane { display: none; }
+  .hop { transform: scale(0.8); }
+  .pencil { opacity: 0.9; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage *, .stage { animation: none !important; }
+  .plane { left: 8vw; }
+  .pencil { left: 5vw; }
+  .eraser { transform: none; }
+}
+
+/* ---------- Music panel ---------- */
+.radio {
+  font-family: Verdana, Geneva, sans-serif;
+  font-size: 0.85rem;
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.7rem;
+  background: #f6f9ff;
+  border: 1px dashed var(--edge);
+}
+.radio button { margin: 0 0.8rem 0 0; }
+.radio label { display: inline; margin: 0; font-size: 0.85rem; }
+.radio input[type="range"] { width: 7rem; max-width: none; padding: 0; border: 0; background: none; vertical-align: middle; }
+.radio .hint { display: block; margin: 0.35rem 0 0; }
