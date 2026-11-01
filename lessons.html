@@ -4,14 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Lessons - Salah's little classroom</title>
+<title>Lessons - Graph paper school</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <main class="sheet">
   <header>
-    <p class="brand"><a href="index.html">Salah's little classroom</a></p>
+    <p class="brand"><a href="index.html">Graph paper school</a></p>
     <nav>[ <a href="index.html">home</a> | <a href="lessons.html">lessons</a> | <button type="button" id="out" class="linklike">log out</button> ]</nav>
+    <div id="music-slot" class="radio" hidden></div>
   </header>
 
   <section id="loading">
@@ -179,5 +180,7 @@ $("out").addEventListener("click", async () => {
   location.replace("index.html");
 });
 </script>
+<script type="module" src="stage.js"></script>
+<script type="module" src="music.js"></script>
 </body>
 </html>
